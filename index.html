@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LORE — Local OCR Record Extractor</title>
+    <style>
+        :root[data-theme="light"] {
+            --bg: #ffffff;
+            --card: #ffffff;
+            --border: #e4e4e7;
+            --border-hover: #a1a1aa;
+            --text-primary: #09090b;
+            --text-secondary: #71717a;
+            --input-bg: #ffffff;
+            --btn-primary-bg: #09090b;
+            --btn-primary-text: #ffffff;
+            --btn-primary-hover: #27272a;
+            --btn-secondary-bg: transparent;
+            --btn-secondary-text: #09090b;
+            --btn-secondary-border: #e4e4e7;
+            --btn-secondary-hover: #f4f4f5;
+            --btn-success-bg: #000000;
+            --btn-success-text: #ffffff;
+            --dropzone-bg: #fafafa;
+            --dropzone-border: #d4d4d8;
+            --table-header-bg: #f4f4f5;
+            --table-row-hover: #fafafa;
+            --table-border: #e4e4e7;
+            --progress-bg: #e4e4e7;
+            --progress-fill: #09090b;
+
+            --banner-info-bg: #eff6ff;
+            --banner-info-border: #bfdbfe;
+            --banner-info-text: #1e40af;
+            --banner-warn-bg: #fefce8;
+            --banner-warn-border: #fef08a;
+            --banner-warn-text: #854d0e;
+            --banner-err-bg: #fef2f2;
+            --banner-err-border: #fecaca;
+            --banner-err-text: #991b1b;
+        }
+
+        :root[data-theme="dark"] {
+            --bg: #000000;
+            --card: #09090b;
+            --border: #27272a;
+            --border-hover: #52525b;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --input-bg: #000000;
+            --btn-primary-bg: #ffffff;
+            --btn-primary-text: #000000;
+            --btn-primary-hover: #e4e4e7;
+            --btn-secondary-bg: transparent;
+            --btn-secondary-text: #ffffff;
+            --btn-secondary-border: #27272a;
+            --btn-secondary-hover: #18181b;
+            --btn-success-bg: #ffffff;
+            --btn-success-text: #000000;
+            --dropzone-bg: #000000;
+            --dropzone-border: #27272a;
+            --table-header-bg: #18181b;
+            --table-row-hover: #121215;
+            --table-border: #27272a;
+            --progress-bg: #27272a;
+            --progress-fill: #ffffff;
+
+            --banner-info-bg: #172554;
+            --banner-info-border: #1e40af;
+            --banner-info-text: #93c5fd;
+            --banner-warn-bg: #422006;
+            --banner-warn-border: #854d0e;
+            --banner-warn-text: #fde047;
+            --banner-err-bg: #450a0a;
+            --banner-err-border: #991b1b;
+            --banner-err-text: #fca5a5;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .brand-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .theme-toggle-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .theme-toggle-btn:hover { border-color: var(--border-hover); }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: 24px;
+            flex: 1;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .dropzone {
+            border: 1.5px dashed var(--dropzone-border);
+            background-color: var(--dropzone-bg);
+            border-radius: 10px;
+            padding: 32px 16px;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .dropzone:hover, .dropzone.dragover { border-color: var(--text-primary); }
+        .dropzone-icon { font-size: 1.5rem; color: var(--text-secondary); }
+        .dropzone-text { font-size: 0.875rem; font-weight: 500; color: var(--text-primary); word-break: break-all; }
+        .dropzone-subtext { font-size: 0.75rem; color: var(--text-secondary); }
+
+        .banner {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 0.8125rem;
+            display: flex;
+            gap: 10px;
+            line-height: 1.4;
+            border: 1px solid transparent;
+        }
+
+        .banner-icon { font-size: 1.1rem; line-height: 1; margin-top: 1px; }
+        .banner-content { display: flex; flex-direction: column; gap: 4px; }
+        .banner-title { font-weight: 700; font-size: 0.85rem; }
+        .banner-message { opacity: 0.95; }
+        .banner-instruction { font-weight: 600; opacity: 0.9; margin-top: 2px; }
+
+        .banner.info { background-color: var(--banner-info-bg); border-color: var(--banner-info-border); color: var(--banner-info-text); }
+        .banner.warning { background-color: var(--banner-warn-bg); border-color: var(--banner-warn-border); color: var(--banner-warn-text); }
+        .banner.error { background-color: var(--banner-err-bg); border-color: var(--banner-err-border); color: var(--banner-err-text); }
+
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+
+        label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        select:focus, input[type="text"]:focus { border-color: var(--text-primary); }
+
+        .btn {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background-color: var(--btn-primary-bg); color: var(--btn-primary-text); }
+        .btn-primary:hover:not(:disabled) { background-color: var(--btn-primary-hover); }
+        .btn-secondary { background-color: var(--btn-secondary-bg); color: var(--btn-secondary-text); border: 1px solid var(--btn-secondary-border); }
+        .btn-secondary:hover:not(:disabled) { background-color: var(--btn-secondary-hover); }
+        .btn-success { background-color: var(--btn-success-bg); color: var(--btn-success-text); border: 1px solid var(--border); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .button-group { display: flex; flex-direction: column; gap: 8px; }
+
+        .status-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .status-text { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background-color: var(--progress-bg);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background-color: var(--progress-fill);
+            transition: width 0.2s ease;
+        }
+
+        .table-panel { display: flex; flex-direction: column; height: 100%; min-height: 500px; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--bg);
+            max-height: calc(100vh - 180px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.8125rem;
+            white-space: nowrap;
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--table-border);
+            border-right: 1px solid var(--table-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--table-border);
+            border-right: 1px solid var(--table-border);
+            color: var(--text-primary);
+        }
+
+        tr:hover td { background-color: var(--table-row-hover); }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 350px;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            gap: 8px;
+        }
+
+        footer {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .footer-link:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        .footer-link svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .footer-credits {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+    </style>
+    
+    <script src="vendor/pdf.min.js"></script>
+    <script src="vendor/tesseract.min.js"></script>
+    <script src="vendor/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="brand-title">
+            <span>LORE</span>
+            <span class="badge">Local OCR Record Extractor</span>
+        </div>
+        <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle Theme">
+            <span id="theme-icon">☀️</span>
+            <span id="theme-label">Light Mode</span>
+        </button>
+    </header>
+
+    <main class="main-grid">
+        <section class="panel">
+            <div id="dropzone" class="dropzone">
+                <div class="dropzone-icon">📄</div>
+                <div class="dropzone-text" id="file-label">Drop PDF document here</div>
+                <div class="dropzone-subtext">or click to browse local filesystem</div>
+                <input type="file" id="file-input" accept="application/pdf,.pdf" style="display: none;">
+            </div>
+
+            <div id="validation-banner" class="banner" style="display: none;">
+                <div id="banner-icon" class="banner-icon">ℹ️</div>
+                <div class="banner-content">
+                    <div id="banner-title" class="banner-title">Validation Notice</div>
+                    <div id="banner-message" class="banner-message">Message body...</div>
+                    <div id="banner-instruction" class="banner-instruction">Recommended action...</div>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="mode-select">Extraction Engine</label>
+                <select id="mode-select">
+                    <option value="native">Native Vector Text Layer (Fast)</option>
+                    <option value="ocr">WASM OCR Engine (Scanned Documents)</option>
+                </select>
+            </div>
+
+            <div class="field-group" id="dpi-group" style="display: none;">
+                <label for="dpi-select">OCR Render Scale (DPI Precision)</label>
+                <select id="dpi-select">
+                    <option value="1.5">1.5x — Draft (Fastest, Lower Precision)</option>
+                    <option value="2.0" selected>2.0x — Standard (Balanced)</option>
+                    <option value="3.0">3.0x — High Precision (Blurry / Small Text)</option>
+                </select>
+            </div>
+
+            <div class="field-group">
+                <label for="page-range">Page Range</label>
+                <input type="text" id="page-range" placeholder="All pages (e.g., 1-5, 8)">
+            </div>
+
+            <div class="field-group">
+                <label for="export-format">Export Format</label>
+                <select id="export-format">
+                    <option value="xlsx">Excel Workbook (.xlsx)</option>
+                    <option value="csv">Comma-Separated Values (.csv)</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button id="process-btn" class="btn btn-primary" disabled>Process Document</button>
+                <button id="export-btn" class="btn btn-success" style="display: none;">Export LORE Record</button>
+                <button id="reset-btn" class="btn btn-secondary">Clear / Reset</button>
+            </div>
+
+            <div class="status-box" id="status-box" style="display: none;">
+                <span class="status-text" id="status-text">Idle</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel table-panel">
+            <div class="panel-header">
+                <label>Structured Record Output</label>
+                <span class="status-text" id="row-count">0 rows loaded</span>
+            </div>
+            <div class="table-container" id="table-container">
+                <div class="empty-state">
+                    <p>No document processed yet.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/vicariusagent/lore" target="_blank" rel="noopener noreferrer" class="footer-link">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+                <span>vicariusagent/lore</span>
+            </a>
+        </div>
+        <div class="footer-credits">
+            <span>Powered by</span>
+            <a href="https://github.com/mozilla/pdf.js" target="_blank" rel="noopener noreferrer" class="footer-link">PDF.js</a>
+            <span>•</span>
+            <a href="https://github.com/naptha/tesseract.js" target="_blank" rel="noopener noreferrer" class="footer-link">Tesseract.js</a>
+            <span>•</span>
+            <a href="https://github.com/SheetJS/sheetjs" target="_blank" rel="noopener noreferrer" class="footer-link">SheetJS</a>
+        </div>
+    </footer>
+</div>
+
+<script>
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+    }
+
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeLabel = document.getElementById('theme-label');
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') {
+            themeIcon.textContent = '☀️';
+            themeLabel.textContent = 'Light Mode';
+        } else {
+            themeIcon.textContent = '🌙';
+            themeLabel.textContent = 'Dark Mode';
+        }
+    }
+
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    let currentFile = null;
+    let currentPdfDoc = null;
+    let parsedCsvData = [];
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileLabel = document.getElementById('file-label');
+    const processBtn = document.getElementById('process-btn');
+    const exportBtn = document.getElementById('export-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const exportFormatSelect = document.getElementById('export-format');
+    const modeSelect = document.getElementById('mode-select');
+    const dpiGroup = document.getElementById('dpi-group');
+    const dpiSelect = document.getElementById('dpi-select');
+    const pageRangeInput = document.getElementById('page-range');
+    const statusBox = document.getElementById('status-box');
+    const statusText = document.getElementById('status-text');
+    const progressFill = document.getElementById('progress-fill');
+    const tableContainer = document.getElementById('table-container');
+    const rowCountText = document.getElementById('row-count');
+
+    const validationBanner = document.getElementById('validation-banner');
+    const bannerIcon = document.getElementById('banner-icon');
+    const bannerTitle = document.getElementById('banner-title');
+    const bannerMessage = document.getElementById('banner-message');
+    const bannerInstruction = document.getElementById('banner-instruction');
+
+    modeSelect.addEventListener('change', () => {
+        dpiGroup.style.display = modeSelect.value === 'ocr' ? 'flex' : 'none';
+    });
+
+    function hideBanner() {
+        validationBanner.style.display = 'none';
+        validationBanner.className = 'banner';
+    }
+
+    function showBanner(type, title, message, instruction) {
+        validationBanner.className = `banner ${type}`;
+        bannerTitle.textContent = title;
+        bannerMessage.textContent = message;
+        bannerInstruction.textContent = instruction || '';
+
+        if (type === 'error') bannerIcon.textContent = '⛔';
+        else if (type === 'warning') bannerIcon.textContent = '⚠️';
+        else bannerIcon.textContent = 'ℹ️';
+
+        validationBanner.style.display = 'flex';
+    }
+
+    function resetState() {
+        currentFile = null;
+        currentPdfDoc = null;
+        parsedCsvData = [];
+        fileInput.value = '';
+        fileLabel.textContent = 'Drop PDF document here';
+        processBtn.disabled = true;
+        exportBtn.style.display = 'none';
+        statusBox.style.display = 'none';
+        progressFill.style.width = '0%';
+        statusText.textContent = 'Idle';
+        pageRangeInput.value = '';
+        rowCountText.textContent = '0 rows loaded';
+        tableContainer.innerHTML = `<div class="empty-state"><p>No document processed yet.</p></div>`;
+        hideBanner();
+    }
+
+    resetBtn.addEventListener('click', resetState);
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFileSelect(e.target.files[0]); });
+
+    async function handleFileSelect(file) {
+        hideBanner();
+        currentFile = null;
+        currentPdfDoc = null;
+        processBtn.disabled = true;
+        exportBtn.style.display = 'none';
+
+        const fileName = file.name;
+        const fileExt = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+        
+        if (fileExt !== '.pdf' && file.type !== 'application/pdf') {
+            showBanner(
+                'error',
+                'Invalid File Format',
+                `The file "${fileName}" is not recognized as a PDF. File extension is "${fileExt || 'none'}".`,
+                'Instruction: Please select a document ending in .pdf format.'
+            );
+            fileLabel.textContent = 'Drop PDF document here';
+            return;
+        }
+
+        if (file.size === 0) {
+            showBanner(
+                'error',
+                'Corrupted / Empty File',
+                `The file "${fileName}" has a size of 0 bytes.`,
+                'Instruction: Re-download or re-export the PDF to ensure it is not truncated or damaged.'
+            );
+            fileLabel.textContent = fileName;
+            return;
+        }
+
+        const fileSizeMB = file.size / (1024 * 1024);
+        if (fileSizeMB > 200) {
+            showBanner(
+                'error',
+                'File Size Limit Exceeded (> 200 MB)',
+                `This file is ${fileSizeMB.toFixed(1)} MB. Files larger than 200 MB risk crashing browser tab RAM limits.`,
+                'Instruction: Split the PDF into smaller files using a local PDF tool before uploading.'
+            );
+            fileLabel.textContent = fileName;
+            return;
+        }
+
+        if (typeof pdfjsLib === 'undefined') {
+            showBanner(
+                'error',
+                'Vendor Dependency Missing',
+                'The library pdf.min.js failed to load from vendor/ directory.',
+                'Instruction: Run the vendor setup curl script from the README to download vendor assets.'
+            );
+            return;
+        }
+
+        fileLabel.textContent = fileName;
+        statusBox.style.display = 'flex';
+        statusText.textContent = 'Validating PDF integrity...';
+        progressFill.style.width = '100%';
+
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            
+            currentFile = file;
+            currentPdfDoc = pdfDoc;
+            processBtn.disabled = false;
+            statusBox.style.display = 'none';
+
+            const numPages = pdfDoc.numPages;
+
+            if (numPages > 100) {
+                showBanner(
+                    'warning',
+                    `Large Document Warning (${numPages} Pages)`,
+                    `Document contains ${numPages} pages (${fileSizeMB.toFixed(1)} MB). Processing high page counts with WASM OCR can cause high memory utilization.`,
+                    'Instruction: Use the "Page Range" filter (e.g. 1-25) to process in batches, or use "Native Vector Text Layer" mode.'
+                );
+            } else if (fileSizeMB > 50) {
+                showBanner(
+                    'warning',
+                    `Large File Warning (${fileSizeMB.toFixed(1)} MB)`,
+                    `This file is larger than 50 MB. Processing may take longer depending on browser rendering performance.`,
+                    'Instruction: If using WASM OCR Engine, process pages in ranges to prevent browser memory slowdowns.'
+                );
+            } else {
+                showBanner(
+                    'info',
+                    'PDF Validated Successfully',
+                    `Loaded "${fileName}" (${numPages} page${numPages > 1 ? 's' : ''}, ${fileSizeMB.toFixed(1)} MB).`,
+                    'Instruction: Select an extraction engine and export format, then click "Process Document".'
+                );
+            }
+
+        } catch (err) {
+            statusBox.style.display = 'none';
+
+            if (err.name === 'PasswordException') {
+                showBanner(
+                    'error',
+                    'Password Protected / Encrypted PDF',
+                    'This document is encrypted or password-protected. LORE cannot parse encrypted files.',
+                    'Instruction: Decrypt or remove password protection using your PDF viewer/editor before uploading.'
+                );
+            } else if (err.name === 'InvalidPDFException') {
+                showBanner(
+                    'error',
+                    'Corrupted PDF Structure',
+                    'PDF.js failed to parse document headers. The file structure is broken or corrupted.',
+                    'Instruction: Re-export or print the file to a fresh PDF to fix structural errors.'
+                );
+            } else {
+                showBanner(
+                    'error',
+                    'PDF Parsing Error',
+                    `An unexpected error occurred during document validation: ${err.message || err}`,
+                    'Instruction: Check browser console for detailed trace logs or test opening the file in Firefox.'
+                );
+            }
+        }
+    }
+
+    function parsePageRange(rangeStr, maxPages) {
+        if (!rangeStr.trim()) return Array.from({length: maxPages}, (_, i) => i + 1);
+        const pages = new Set();
+        const parts = rangeStr.split(',');
+        for (let part of parts) {
+            if (part.includes('-')) {
+                const [start, end] = part.split('-').map(Number);
+                if (start && end) {
+                    for (let i = Math.max(1, start); i <= Math.min(end, maxPages); i++) pages.add(i);
+                }
+            } else {
+                const p = Number(part);
+                if (p && p >= 1 && p <= maxPages) pages.add(p);
+            }
+        }
+        return Array.from(pages).sort((a, b) => a - b);
+    }
+
+    function normalizeGrid(rows) {
+        if (!rows.length) return [];
+        const maxCols = Math.max(...rows.map(r => r.length));
+        return rows.map(row => {
+            const padded = [...row];
+            while (padded.length < maxCols) {
+                padded.push('');
+            }
+            return padded;
+        });
+    }
+
+    processBtn.addEventListener('click', async () => {
+        if (!currentFile || !currentPdfDoc) return;
+        
+        processBtn.disabled = true;
+        exportBtn.style.display = 'none';
+        statusBox.style.display = 'flex';
+        parsedCsvData = [];
+
+        const totalPages = currentPdfDoc.numPages;
+        const pagesToProcess = parsePageRange(pageRangeInput.value, totalPages);
+
+        if (!pagesToProcess.length) {
+            showBanner(
+                'error',
+                'Invalid Page Range',
+                `Page range "${pageRangeInput.value}" contains no valid pages for this document (Total pages: ${totalPages}).`,
+                'Instruction: Enter a valid range such as "1-5" or leave the field empty to process all pages.'
+            );
+            processBtn.disabled = false;
+            statusBox.style.display = 'none';
+            return;
+        }
+
+        let tesseractWorker = null;
+        if (modeSelect.value === 'ocr') {
+            statusText.textContent = 'Initializing WASM OCR Engine...';
+            try {
+                tesseractWorker = await Tesseract.createWorker('eng', 1, {
+                    corePath: 'vendor/tesseract-core.wasm.js',
+                    workerPath: 'vendor/worker.min.js',
+                    langPath: 'vendor/'
+                });
+                await tesseractWorker.setParameters({
+                    tessedit_char_whitelist: '0123456789.,-()$%€£ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz/ ',
+                    preserve_interword_spaces: '1'
+                });
+            } catch (err) {
+                statusBox.style.display = 'none';
+                processBtn.disabled = false;
+                showBanner(
+                    'error',
+                    'WASM OCR Initialization Failed',
+                    `Failed to start Tesseract WebAssembly engine: ${err.message || err}`,
+                    'Instruction: Verify that vendor/tesseract-core.wasm.js, vendor/worker.min.js, and vendor/eng.traineddata.gz exist in vendor/ directory.'
+                );
+                return;
+            }
+        }
+
+        try {
+            const scaleFactor = parseFloat(dpiSelect.value) || 2.0;
+            const rawRows = [];
+
+            for (let idx = 0; idx < pagesToProcess.length; idx++) {
+                const pageNum = pagesToProcess[idx];
+                statusText.textContent = `Processing Page ${pageNum} of ${totalPages}...`;
+                progressFill.style.width = `${((idx + 1) / pagesToProcess.length) * 100}%`;
+
+                const page = await currentPdfDoc.getPage(pageNum);
+                let pageRows = [];
+
+                if (modeSelect.value === 'native') {
+                    pageRows = await extractNativeTable(page);
+                } else {
+                    pageRows = await extractOcrTable(page, tesseractWorker, scaleFactor);
+                }
+
+                rawRows.push(...pageRows);
+            }
+
+            if (tesseractWorker) await tesseractWorker.terminate();
+
+            parsedCsvData = normalizeGrid(rawRows);
+
+            statusText.textContent = 'Processing Complete!';
+            processBtn.disabled = false;
+            exportBtn.style.display = 'flex';
+            renderPreviewTable(parsedCsvData);
+
+            if (!parsedCsvData.length) {
+                showBanner(
+                    'warning',
+                    'No Tabular Data Found',
+                    'The document was processed, but no readable text or grid rows were detected.',
+                    'Instruction: If you used "Native Vector Layer", try switching to "WASM OCR Engine" for scanned/image PDFs.'
+                );
+            }
+        } catch (err) {
+            if (tesseractWorker) await tesseractWorker.terminate();
+            statusBox.style.display = 'none';
+            processBtn.disabled = false;
+            showBanner(
+                'error',
+                'Document Processing Error',
+                `An error occurred while extracting tabular data: ${err.message || err}`,
+                'Instruction: Try reducing the page range or refresh the tab to clear browser memory.'
+            );
+        }
+    });
+
+    async function extractNativeTable(page) {
+        const textContent = await page.getTextContent();
+        const items = textContent.items;
+        if (!items.length) return [];
+
+        const Y_TOLERANCE = 4;
+        const linesMap = {};
+
+        items.forEach(item => {
+            if (!item.str.trim()) return;
+            const y = item.transform[5];
+            const x = item.transform[4];
+
+            let matchedY = Object.keys(linesMap).find(lineY => Math.abs(lineY - y) < Y_TOLERANCE);
+            if (!matchedY) {
+                matchedY = y;
+                linesMap[matchedY] = [];
+            }
+            linesMap[matchedY].push({ x, text: item.str });
+        });
+
+        const sortedY = Object.keys(linesMap).sort((a, b) => parseFloat(b) - parseFloat(a));
+        return sortedY.map(y => {
+            const rowItems = linesMap[y].sort((a, b) => a.x - b.x);
+            return rowItems.map(i => i.text.trim());
+        });
+    }
+
+    async function extractOcrTable(page, worker, scale = 2.0) {
+        const viewport = page.getViewport({ scale: scale });
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+        const result = await worker.recognize(canvas);
+        
+        // Immediate RAM Garbage Collection on backing canvas bitmap
+        canvas.width = 0;
+        canvas.height = 0;
+
+        const words = result.data.words;
+        const Y_TOLERANCE = 6 * scale;
+        const linesMap = {};
+
+        words.forEach(word => {
+            if (!word.text.trim()) return;
+            const y = word.bbox.y0;
+            const x = word.bbox.x0;
+
+            let matchedY = Object.keys(linesMap).find(lineY => Math.abs(lineY - y) < Y_TOLERANCE);
+            if (!matchedY) {
+                matchedY = y;
+                linesMap[matchedY] = [];
+            }
+            linesMap[matchedY].push({ x, text: word.text });
+        });
+
+        const sortedY = Object.keys(linesMap).sort((a, b) => parseFloat(a) - parseFloat(b));
+        return sortedY.map(y => {
+            const rowItems = linesMap[y].sort((a, b) => a.x - b.x);
+            return rowItems.map(i => i.text.trim());
+        });
+    }
+
+    function renderPreviewTable(data) {
+        rowCountText.textContent = `${data.length} rows loaded`;
+        if (!data.length) {
+            tableContainer.innerHTML = `<div class="empty-state"><p>No tabular text extracted.</p></div>`;
+            return;
+        }
+
+        let html = '<table><tbody>';
+        data.slice(0, 150).forEach(row => {
+            html += '<tr>';
+            row.forEach(cell => {
+                html += `<td>${escapeHtml(cell)}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+
+        if (data.length > 150) {
+            html += `<p style="padding: 12px; color: var(--text-secondary); font-size: 0.75rem;">Showing first 150 rows out of ${data.length} total rows.</p>`;
+        }
+
+        tableContainer.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    exportBtn.addEventListener('click', () => {
+        if (!parsedCsvData.length || !currentFile) return;
+
+        const format = exportFormatSelect.value;
+        const baseFilename = currentFile.name.replace(/\.pdf$/i, '');
+
+        if (format === 'csv') {
+            const csvContent = parsedCsvData.map(row => 
+                row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `${baseFilename}_lore_extract.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } else if (format === 'xlsx') {
+            if (typeof XLSX === 'undefined') {
+                showBanner(
+                    'error',
+                    'Vendor Dependency Missing',
+                    'The library xlsx.full.min.js failed to load from vendor/ directory.',
+                    'Instruction: Download xlsx.full.min.js into vendor/ directory to enable Excel export.'
+                );
+                return;
+            }
+
+            const worksheet = XLSX.utils.aoa_to_sheet(parsedCsvData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "LORE Extract");
+            XLSX.writeFile(workbook, `${baseFilename}_lore_extract.xlsx`);
+        }
+    });
+</script>
+</body>
+</html>
