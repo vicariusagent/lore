@@ -376,7 +376,6 @@
         }
     </style>
     
-    <script src="vendor/pdf.min.js"></script>
     <script src="vendor/tesseract.min.js"></script>
     <script src="vendor/xlsx.full.min.js"></script>
 </head>
@@ -487,9 +486,11 @@
     </footer>
 </div>
 
-<script>
+<script type="module">
+    import * as pdfjsLib from './vendor/pdf.min.mjs';
+
     if (typeof pdfjsLib !== 'undefined') {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.js';
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdf.worker.min.mjs';
     }
 
     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -638,7 +639,7 @@
             showBanner(
                 'error',
                 'Vendor Dependency Missing',
-                'The library pdf.min.js failed to load from vendor/ directory.',
+                'The PDF.js ES module failed to load from vendor/ directory.',
                 'Instruction: Run the vendor setup curl script from the README to download vendor assets.'
             );
             return;
@@ -769,7 +770,7 @@
             statusText.textContent = 'Initializing WASM OCR Engine...';
             try {
                 tesseractWorker = await Tesseract.createWorker('eng', 1, {
-                    corePath: 'vendor/tesseract-core.wasm.js',
+                    corePath: 'vendor/tesseract-core-lstm.wasm.js',
                     workerPath: 'vendor/worker.min.js',
                     langPath: 'vendor/'
                 });
@@ -784,7 +785,7 @@
                     'error',
                     'WASM OCR Initialization Failed',
                     `Failed to start Tesseract WebAssembly engine: ${err.message || err}`,
-                    'Instruction: Verify that vendor/tesseract-core.wasm.js, vendor/worker.min.js, and vendor/eng.traineddata.gz exist in vendor/ directory.'
+                    'Instruction: Verify that vendor/tesseract-core-lstm.wasm.js, vendor/worker.min.js, and vendor/eng.traineddata.gz exist in vendor/ directory.'
                 );
                 return;
             }
