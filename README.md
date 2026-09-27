@@ -8,50 +8,48 @@ All vendor libraries, WebAssembly (WASM) binaries, and OCR language models are p
 
 ## Execution Modes & Browser Rules
 
-Chromium-based browsers (Chrome, Edge, Brave, Arc) restrict Web Workers and WASM loading over `file://` URLs due to same-origin security policies. Depending on your engine choice and browser, launch LORE using one of the methods below:
-
-### Option A: WASM OCR Mode (or Chromium Browsers) — Local Server Required
-
-To use the browser-based WASM OCR engine or run the app in Chrome/Edge, serve the project folder over a local HTTP origin so the browser can execute local Web Worker scripts:
+Serve LORE from a local HTTP origin in every browser. The current PDF.js release is an ES module, and the OCR engine uses local Web Workers and WebAssembly files; browsers restrict loading these assets from `file://` URLs.
 
 ```bash
 cd local-ocr-record-extractor
 python3 -m http.server 8080
-# Open http://localhost:8080 in Chrome, Edge, or Brave
-
+# Open http://localhost:8080 in Chrome, Edge, Firefox, or another browser
 ```
-
-### Option B: Native Vector Mode — Direct File Launch
-
-If you are using **Native Vector Text Layer** mode, or opening the app in **Mozilla Firefox**, no local server is required. Simply double-click `index.html` or open it directly in your browser (`file:///.../index.html`).
 
 ---
 
 ## Upstream Dependencies & Verified Links
 
-All dependencies are pre-populated in the `vendor/` directory. No external installations or downloads are necessary to run the app.
+The versions below were the latest releases identified as of **August 31, 2026**. Runtime libraries and model files are pre-bundled under `vendor/`; LORE does not load them from a CDN while processing documents.
 
-| Library / Asset | Version | Description | Project Home & GitHub |
-| --- | --- | --- | --- |
-| **PDF.js** | `Latest` (`pdfjs-dist`) | Canvas rendering & vector text extraction engine | [Official Site](https://mozilla.github.io/pdf.js/) • [GitHub Repository](https://www.google.com/search?q=https://github.com/mozilla/pdf.js) |
-| **Tesseract.js** | `Latest` (`v5+`) | Pure JavaScript interface for OCR operations | [Official Site](https://tesseract.projectnaptha.com/) • [GitHub Repository](https://www.google.com/search?q=https://github.com/naptha/tesseract.js) |
-| **Tesseract Core (WASM)** | `Latest` (`v5+`) | Compiled C++ Tesseract engine via WebAssembly | [GitHub Repository](https://github.com/naptha/tesseract.js-core) |
-| **Tesseract Language Data** | `4.0.0_best` | Trained LSTM language model for English (`eng`) | [GitHub Data Repo](https://www.google.com/search?q=https://github.com/naptha/tesseract.js-data) |
-| **SheetJS (xlsx)** | `Latest` (`xlsx-latest`) | Spreadsheet parser and `.xlsx` export builder | [Official Site](https://sheetjs.com/) • [GitHub Repository](https://github.com/SheetJS/sheetjs) |
+| Dependency | Pinned version and release date | What it provides |
+| --- | --- | --- |
+| [PDF.js / `pdfjs-dist`](https://github.com/mozilla/pdf.js/releases/tag/v6.3.289) | `6.3.289` — **2026-08-29** | PDF parsing, vector text extraction, and canvas rendering. This release uses the `.mjs` module build and worker. |
+| [Tesseract.js](https://github.com/naptha/tesseract.js/releases/tag/v7.0.0) | `7.0.0` — **2025-12-15** | JavaScript OCR worker interface. The v7 release adds faster recognition builds and drops Node.js 14 support. |
+| [Tesseract.js Core](https://github.com/naptha/tesseract.js-core/releases/tag/v7.0.0) | `7.0.0` — **2025-12-11** | WebAssembly OCR engine. The updater uses the LSTM build for compatibility with LORE's OEM 1 setting. |
+| [English data package](https://www.npmjs.com/package/@tesseract.js-data/eng) | `@tesseract.js-data/eng@1.0.0`; model `4.0.0_best_int` — package published **2023** (upstream lists the year, not an exact date) | Integerized best English LSTM model distributed for Tesseract.js. |
+| [SheetJS CE](https://docs.sheetjs.com/docs/getting-started/installation/standalone/) | `0.20.3` — **2024-07-12** | Spreadsheet workbook creation and `.xlsx` export. This release includes improved Numbers/ODS merge-cell parsing and NaN/infinity handling. |
 
 ---
 
 ## Updating Dependencies
 
-To update pre-bundled vendor libraries directly to their latest upstream releases while maintaining offline readiness, execute the included update script:
+`update-dependencies.sh` downloads the exact versions listed above and fails if a request returns an HTTP error. Updating the pins requires an internet connection; the app continues to process documents offline after the refreshed files are bundled.
 
-```bash
-chmod +x update-dependencies.sh
-./update-dependencies.sh
+To update dependencies:
 
-```
+1. Check each upstream project's release notes and choose compatible, stable versions.
+2. Change the version constants and asset URLs in `update-dependencies.sh`. Keep PDF.js and its worker on the same version, and keep Tesseract.js, its core, and its language model compatible.
+3. Run the script from the project root:
 
-*Note: The script dynamically pulls floating `@latest` releases from jsDelivr, unpkg, and SheetJS CDNs to keep local binaries current.*
+   ```bash
+   chmod +x update-dependencies.sh
+   ./update-dependencies.sh
+   ```
+
+4. Verify the downloaded filenames match the paths in `index.html`, update the version and release-date table above, then check native PDF extraction, OCR, CSV, and XLSX export in a browser served over HTTP.
+
+The updater writes each download to a temporary file and replaces the vendored file only after a successful download. Review dependency changes before committing the refreshed `vendor/` assets.
 
 ---
 
@@ -61,12 +59,12 @@ chmod +x update-dependencies.sh
 local-ocr-record-extractor/
 ├── index.html                  # UI, state engine, pre-flight validation & grid parser
 ├── README.md                   # System documentation & operating guide
-├── update-dependencies.sh      # Fetch & update vendor files to latest releases
+├── update-dependencies.sh      # Fetch pinned vendor releases
 └── vendor/                     # Pre-bundled offline assets (no download needed)
     ├── eng.traineddata.gz      # English OCR language model dataset
-    ├── pdf.min.js              # PDF.js main API script
-    ├── pdf.worker.min.js       # PDF.js background worker thread
-    ├── tesseract-core.wasm.js  # Tesseract WebAssembly engine binary
+    ├── pdf.min.mjs             # PDF.js ES module API script
+    ├── pdf.worker.min.mjs      # PDF.js module worker
+    ├── tesseract-core-lstm.wasm.js # Tesseract LSTM WebAssembly engine
     ├── tesseract.min.js        # Tesseract.js main script
     ├── worker.min.js           # Tesseract.js worker thread
     └── xlsx.full.min.js        # SheetJS standalone library
