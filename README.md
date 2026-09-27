@@ -63,13 +63,16 @@ local-ocr-record-extractor/
 ├── README.md                   # System documentation & operating guide
 ├── update-dependencies.sh      # Fetch pinned vendor releases
 └── vendor/                     # Pre-bundled offline assets (no download needed)
-    ├── eng.traineddata.gz      # English OCR language model dataset
-    ├── pdf.min.mjs             # PDF.js ES module API script
-    ├── pdf.worker.min.mjs      # PDF.js module worker
-    ├── tesseract-core-lstm.wasm.js # Tesseract LSTM WebAssembly engine
-    ├── tesseract.min.js        # Tesseract.js main script
-    ├── worker.min.js           # Tesseract.js worker thread
-    └── xlsx.full.min.js        # SheetJS standalone library
+    ├── eng.traineddata.gz     # English OCR language model
+    ├── pdf.min.mjs            # Pinned PDF.js ES module API
+    ├── pdf.worker.min.mjs     # Matching PDF.js module worker
+    ├── pdf.min.js             # Legacy fallback until the updater is run
+    ├── pdf.worker.min.js      # Legacy fallback worker
+    ├── tesseract-core-lstm.wasm.js # Pinned Tesseract LSTM WebAssembly engine
+    ├── tesseract-core.wasm.js # Legacy fallback until the updater is run
+    ├── tesseract.min.js       # Tesseract.js main script
+    ├── worker.min.js          # Tesseract.js worker thread
+    └── xlsx.full.min.js       # SheetJS standalone library
 
 ```
 
