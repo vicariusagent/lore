@@ -25,6 +25,7 @@ download() {
 
     temp_file="$(mktemp "$VENDOR_DIR/.download.XXXXXX")"
     curl --fail --location --silent --show-error "$url" --output "$temp_file"
+    chmod 644 "$temp_file"
     mv "$temp_file" "$destination"
     temp_file=""
     echo "✓ $(basename "$destination")"
