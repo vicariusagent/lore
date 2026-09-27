@@ -947,7 +947,7 @@
                 row.map(cell => {
                     const value = String(cell);
                     // Prefix formula-like cells so spreadsheet apps treat OCR text as data.
-                    const safeValue = /^[\\u0000-\\u0020]*[=+\\-@]/.test(value) ? `'${value}` : value;
+                    const safeValue = /^\\s*[=+\\-@]/.test(value) ? `'${value}` : value;
                     return `"${safeValue.replace(/"/g, '""')}"`;
                 }).join(',')
             ).join('\n');
