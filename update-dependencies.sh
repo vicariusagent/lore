@@ -2,29 +2,45 @@
 set -euo pipefail
 
 VENDOR_DIR="vendor"
+PDFJS_VERSION="6.3.289"
+TESSERACT_VERSION="7.0.0"
+TESSERACT_CORE_VERSION="7.0.0"
+ENG_DATA_PACKAGE_VERSION="1.0.0"
+ENG_DATA_MODEL_VERSION="4.0.0_best_int"
+SHEETJS_VERSION="0.20.3"
 
-echo "🚀 Updating LORE vendor dependencies to latest stable releases..."
-
-# Ensure target folder exists
 mkdir -p "$VENDOR_DIR"
+temp_file=""
 
-# PDF.js (Latest stable build via jsDelivr)
-echo "→ Fetching latest PDF.js..."
-curl -sSL "https://cdn.jsdelivr.net/npm/pdfjs-dist@latest/build/pdf.min.js" -o "$VENDOR_DIR/pdf.min.js"
-curl -sSL "https://cdn.jsdelivr.net/npm/pdfjs-dist@latest/build/pdf.worker.min.js" -o "$VENDOR_DIR/pdf.worker.min.js"
+cleanup() {
+    if [[ -n "$temp_file" && -f "$temp_file" ]]; then
+        rm -f "$temp_file"
+    fi
+}
+trap cleanup EXIT
 
-# Tesseract.js & Core WASM (Latest releases via unpkg @latest)
-echo "→ Fetching latest Tesseract.js scripts & WASM binary..."
-curl -sSL "https://unpkg.com/tesseract.js@latest/dist/tesseract.min.js" -o "$VENDOR_DIR/tesseract.min.js"
-curl -sSL "https://unpkg.com/tesseract.js@latest/dist/worker.min.js" -o "$VENDOR_DIR/worker.min.js"
-curl -sSL "https://unpkg.com/tesseract.js-core@latest/tesseract-core.wasm.js" -o "$VENDOR_DIR/tesseract-core.wasm.js"
+download() {
+    local url="$1"
+    local destination="$2"
 
-# Tesseract trained language model (Latest LSTM English dataset)
-echo "→ Fetching latest English language model..."
-curl -sSL "https://raw.githubusercontent.com/naptha/tessdata/gh-pages/4.0.0_best/eng.traineddata.gz" -o "$VENDOR_DIR/eng.traineddata.gz"
+    temp_file="$(mktemp "$VENDOR_DIR/.download.XXXXXX")"
+    curl --fail --location --silent --show-error "$url" --output "$temp_file"
+    mv "$temp_file" "$destination"
+    temp_file=""
+    echo "✓ $(basename "$destination")"
+}
 
-# SheetJS (Latest release via official CDN)
-echo "→ Fetching latest SheetJS (xlsx)..."
-curl -sSL "https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js" -o "$VENDOR_DIR/xlsx.full.min.js"
+echo "Updating LORE vendor dependencies to the pinned releases..."
 
-echo "✅ All vendor dependencies updated to latest binaries!"
+download "https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.min.mjs" "$VENDOR_DIR/pdf.min.mjs"
+download "https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_VERSION}/build/pdf.worker.min.mjs" "$VENDOR_DIR/pdf.worker.min.mjs"
+
+download "https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/tesseract.min.js" "$VENDOR_DIR/tesseract.min.js"
+download "https://cdn.jsdelivr.net/npm/tesseract.js@${TESSERACT_VERSION}/dist/worker.min.js" "$VENDOR_DIR/worker.min.js"
+download "https://cdn.jsdelivr.net/npm/tesseract.js-core@${TESSERACT_CORE_VERSION}/tesseract-core-lstm.wasm.js" "$VENDOR_DIR/tesseract-core-lstm.wasm.js"
+
+download "https://cdn.jsdelivr.net/npm/@tesseract.js-data/eng@${ENG_DATA_PACKAGE_VERSION}/${ENG_DATA_MODEL_VERSION}/eng.traineddata.gz" "$VENDOR_DIR/eng.traineddata.gz"
+
+download "https://cdn.sheetjs.com/xlsx-${SHEETJS_VERSION}/package/dist/xlsx.full.min.js" "$VENDOR_DIR/xlsx.full.min.js"
+
+echo "All pinned vendor dependencies were downloaded successfully."
