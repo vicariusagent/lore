@@ -36,6 +36,8 @@ The versions below were the latest releases identified as of **August 31, 2026**
 
 `update-dependencies.sh` downloads the exact versions listed above and fails if a request returns an HTTP error. Updating the pins requires an internet connection; the app continues to process documents offline after the refreshed files are bundled.
 
+The checked-in vendor files remain usable as a fallback until the updater is run. Run it once after pulling this update to replace those snapshots with the pinned versions shown above.
+
 To update dependencies:
 
 1. Check each upstream project's release notes and choose compatible, stable versions.
