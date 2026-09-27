@@ -943,8 +943,13 @@
         const baseFilename = currentFile.name.replace(/\.pdf$/i, '');
 
         if (format === 'csv') {
-            const csvContent = parsedCsvData.map(row => 
-                row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
+            const csvContent = parsedCsvData.map(row =>
+                row.map(cell => {
+                    const value = String(cell);
+                    // Prefix formula-like cells so spreadsheet apps treat OCR text as data.
+                    const safeValue = /^[\\u0000-\\u0020]*[=+\\-@]/.test(value) ? `'${value}` : value;
+                    return `"${safeValue.replace(/"/g, '""')}"`;
+                }).join(',')
             ).join('\n');
 
             const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
